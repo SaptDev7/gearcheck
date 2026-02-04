@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <title>Mechanical Keyboard & Mouse Polling Rate Tester (Hz, CPS, Buttons)</title>
+    
+    <meta name="description" content="Test mechanical keyboard switches for ghosting. Use the mouse tester to check buttons, scroll wheel, polling rate (Hz), and click speed (CPS). The pro tool for gamers.">
+
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚙️</text></svg>">
+
+    <meta property="og:title" content="GearCheck | Pro Keyboard & Mouse Tester">
+    <meta property="og:description" content="Check for ghosting, measure Mouse Hz, and test switch actuation. The ultimate free browser tool for gamers.">
+    <meta property="og:type" content="website">
+    
+    <meta name="theme-color" content="#121212">
+
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "GearCheck",
+      "url": "https://www.gearchecktool.com",
+      "description": "Professional browser-based tool to test mechanical keyboards for ghosting and mouse polling rates.",
+      "applicationCategory": "UtilityApplication",
+      "operatingSystem": "Any",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "featureList": "Keyboard Ghosting Test, Mouse Polling Rate Test, CPS Test, N-Key Rollover Check"
+    }
+    </script>
+
+    <style>
+        :root {
+            --bg-color: #121212;
+            --surface-color: #1e1e1e;
+            --primary-color: #00ff88;
+            --active-color: #00ff88;
+            --tested-border: #004422; 
+            --text-color: #e0e0e0;
+            --key-bg: #2d2d2d;
+            --key-border: #3d3d3d;
+            --ad-placeholder: #181818;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            overflow-x: hidden; 
+        }
+
+        /* --- LAYOUT WRAPPER --- */
+        .main-layout {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            gap: 60px;
+            width: 100%;
+            max-width: 1920px; 
+            transition: gap 0.3s ease;
+        }
+
+        /* --- AD CONTAINERS --- */
+        .ad-container {
+            width: 160px; 
+            height: 600px;
+            background: var(--ad-placeholder);
+            border: 1px dashed #333;
+            border-radius: 8px;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            color: #444;
+            font-size: 0.8rem;
+            font-weight: bold;
+            flex-shrink: 0; 
+            transition: opacity 0.3s ease;
+        }
+
+        /* --- HORIZONTAL AD --- */
+        .horizontal-ad-container {
+            width: 100%;
+            max-width: 950px;       /* Matches the app width */
+            height: 90px;           /* Standard Leaderboard Ad height */
+            background: var(--ad-placeholder);
+            border: 1px dashed #333;
+            border-radius: 8px;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            color: #444;
+            font-size: 0.8rem;
+            font-weight: bold;
+            margin-top: 50px;       /* Space above the ad */
+            margin-bottom: 10px;    /* Space below the ad */
+        }
+
+        /* --- APP CONTAINER --- */
+        .app-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 950px; 
+            transition: max-width 0.3s ease;
+        }
+
+        @media (max-width: 1280px) { .ad-container { display: none; } }
+        @media (max-width: 1750px) {
+            body.full-mode .ad-container { display: none; }
+            body.full-mode .main-layout { gap: 0; } 
+        }
+
+        /* --- HEADER & CONTROLS --- */
+        .header-container, .stats-bar, .mouse-section { width: 100%; max-width: 950px; }
+
+        .header-container { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        
+        .title-group h1 { margin: 0; color: var(--primary-color); text-transform: uppercase; letter-spacing: 2px; font-size: 2rem; }
+        
+        .title-group h2 { 
+            color: #888; 
+            margin: 5px 0 0 0; 
+            font-size: 0.9rem; 
+            font-weight: normal; 
+        }
+        
+        .header-controls { display: flex; gap: 10px; }
+
+        .btn-outline {
+            background: transparent; border: 1px solid var(--primary-color); color: var(--primary-color);
+            padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 600;
+            text-transform: uppercase; font-size: 0.8rem; transition: 0.2s; display: flex; align-items: center; gap: 6px;
+        }
+        .btn-outline:hover { background: rgba(0, 255, 136, 0.1); box-shadow: 0 0 10px rgba(0, 255, 136, 0.2); }
+
+        /* --- STATS BAR --- */
+        .stats-bar { display: flex; gap: 20px; margin-bottom: 30px; }
+        .stat {
+            background: var(--surface-color); padding: 15px 30px; border-radius: 8px; text-align: center;
+            border: 1px solid var(--key-border); min-width: 100px; flex: 1; transition: 0.2s; position: relative;
+        }
+        .stat span { display: block; }
+        .stat-val { font-size: 1.8rem; font-weight: bold; color: var(--primary-color); }
+        .stat-label { font-size: 0.8rem; color: #aaa; text-transform: uppercase; margin-top: 5px; }
+        .stat-interactive { cursor: pointer; }
+        .stat-interactive:hover { border-color: var(--primary-color); }
+        .stat-interactive:hover .stat-label { color: var(--primary-color); }
+
+        /* --- KEYBOARD --- */
+        .keyboard-wrapper { display: flex; justify-content: center; align-items: flex-start; gap: 10px; }
+        .keyboard-container, .nav-container, .numpad-container { padding: 10px; background: var(--surface-color); border-radius: 12px; border: 1px solid var(--key-border); }
+        .hidden { display: none !important; }
+        .keyboard-container { display: flex; flex-direction: column; gap: 6px; }
+        .row { display: flex; gap: 6px; }
+        .nav-container { display: grid; grid-template-columns: repeat(3, 54px); grid-template-rows: 50px 50px 50px; gap: 6px; height: fit-content; }
+        .numpad-container { display: grid; grid-template-columns: repeat(4, 54px); grid-template-rows: repeat(6, 50px); gap: 6px; }
+
+        .key {
+            height: 50px; background: var(--key-bg); border: 1px solid var(--key-border); border-radius: 6px;
+            color: #fff; font-size: 13px; line-height: 1.1; white-space: pre; text-align: center; font-weight: 500;
+            display: flex; align-items: center; justify-content: center; user-select: none; transition: all 0.05s ease; position: relative; box-sizing: border-box; 
+        }
+        .u-num-0 { grid-column: span 2; width: 100%; } .u-num-tall { grid-row: span 2; height: 100%; } .u-f { width: 58.28px; font-size: 11px; } .u-1 { width: 54px; } .u-125 { width: 69px; } .u-15 { width: 84px; } .u-175 { width: 99px; } .u-2 { width: 114px; } .u-225 { width: 129px; } .u-275 { width: 159px; } .u-cmd { width: 69px; } .u-space { width: 324px; } 
+        .key.spacer { visibility: hidden; pointer-events: none; }
+        .key.pressed { background: var(--active-color); color: #121212; box-shadow: 0 0 15px var(--active-color); border-color: var(--active-color); font-weight: bold; z-index: 10; }
+        .key.tested { border-color: var(--primary-color); color: #fff; }
+        .key.tested::after { content: ''; position: absolute; bottom: 4px; width: 4px; height: 4px; background-color: var(--primary-color); border-radius: 50%; box-shadow: 0 0 4px var(--primary-color); }
+        .key.pressed::after { display: none; }
+        .arrow-cluster { display: flex; gap: 6px; align-items: flex-end; } .arrow-stack { display: flex; flex-direction: column; gap: 6px; } .key-half { height: 22px; width: 54px; }
+
+        /* --- MOUSE SECTION --- */
+        .mouse-section { margin-top: 50px; } 
+        
+        .mouse-section .stat-label {
+            margin: 0; 
+            color: var(--primary-color);
+            font-weight: bold;
+            letter-spacing: 1px;
+            font-size: 1.2rem;
+            text-align: center;
+            display: block;
+            margin-bottom: 5px;
+        }
+        
+        .mouse-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: stretch; }
+        @media (max-width: 900px) { .mouse-grid { grid-template-columns: 1fr; } }
+
+        /* LEFT COLUMN */
+        .mouse-box {
+            height: 360px;
+            border: 2px dashed #444; border-radius: 8px;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            background: var(--surface-color); transition: 0.2s; cursor: crosshair; user-select: none;
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.05); position: relative; width: 100%; box-sizing: border-box;
+            overflow: hidden;
+            touch-action: none; /* Prevents scrolling on mobile while testing */
+        }
+        .mouse-box:hover { border-color: var(--primary-color); box-shadow: 0 0 30px rgba(0, 255, 136, 0.2); } 
+        .mouse-box:active { background: #252525; border-color: #fff; box-shadow: none; } 
+        
+        .hz-main { font-size: 2rem; font-weight: bold; color: #fff; pointer-events: none; }
+        .hz-sub { font-size: 0.9rem; color: #888; margin-top: 5px; text-transform: uppercase; letter-spacing: 1px; pointer-events: none;}
+        #peak-hz { color: var(--primary-color); font-weight: bold; }
+        
+        .hz-hint, .click-hint { font-size: 0.75rem; color: #666; pointer-events: none; letter-spacing: 0.5px; text-transform: uppercase; }
+        
+        .click-hint { 
+            text-align: center; 
+            font-weight: bold;
+            user-select: none; 
+            -webkit-user-select: none;
+            color: #666 !important; 
+        }
+
+        /* RIGHT COLUMN */
+        .mouse-panel {
+            position: relative; 
+            display: flex; flex-direction: column; 
+            justify-content: space-between; 
+            gap: 10px;
+            background: var(--surface-color); 
+            padding: 30px 20px;
+            border-radius: 8px;
+            border: 2px dashed #444; 
+            height: 360px; 
+            box-sizing: border-box; cursor: pointer; transition: 0.2s; box-shadow: 0 0 20px rgba(0, 255, 136, 0.05);
+            overflow: hidden; 
+            user-select: none; -webkit-user-select: none;
+            touch-action: none; /* Prevents scrolling on mobile while testing */
+        }
+        
+        .mouse-panel:hover { border-color: var(--primary-color); box-shadow: 0 0 30px rgba(0, 255, 136, 0.2); }
+        .mouse-panel:hover .click-hint { color: #fff; } 
+
+        .mouse-stats-row { display: flex; justify-content: space-between; width: 100%; border-bottom: 1px solid #333; padding-bottom: 10px; }
+        .m-stat { text-align: center; flex: 1; }
+        .m-val { display: block; font-size: 1.4rem; font-weight: bold; color: #fff; }
+        .m-lbl { font-size: 0.75rem; color: #888; text-transform: uppercase; margin-top: 2px; }
+        
+        .reset-icon {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            color: #444;
+            font-size: 1.5rem;
+            line-height: 1;
+            cursor: pointer;
+            transition: 0.2s;
+            user-select: none;
+            z-index: 20;
+        }
+        .reset-icon:hover {
+            color: var(--primary-color);
+            transform: rotate(90deg);
+            text-shadow: 0 0 10px var(--primary-color);
+        }
+
+        .mouse-controls-grid { display: flex; flex-direction: column; gap: 10px; width: 100%; }
+        .mouse-row { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
+        
+        .mouse-key { width: 80px; }
+        
+        .scroll-wheel-container { display: flex; flex-direction: column; gap: 2px; }
+        .scroll-half { 
+            width: 80px; height: 24px; background: var(--key-bg); border: 1px solid var(--key-border); 
+            display: flex; align-items: center; justify-content: center; 
+            color: #888; font-size: 12px; transition: 0.1s; 
+            box-sizing: border-box; 
+        }
+        .scroll-up { border-radius: 12px 12px 0 0; border-bottom: none; }
+        .scroll-down { border-radius: 0 0 12px 12px; border-top: none; }
+        .scroll-half.pressed { background: var(--active-color); color: #121212; box-shadow: 0 0 10px var(--active-color); }
+
+        /* Details CONTENT STYLING */
+        .details-content {
+            margin-top: 40px;
+            text-align: left;
+            max-width: 800px;
+            color: #ccc;
+            line-height: 1.6;
+            border-top: 1px solid #333;
+            padding-top: 10px;
+        }
+
+        .details-content h3 {
+            color: var(--primary-color);
+            margin-top: 30px;
+            margin-bottom: 10px;
+            font-size: 1.2rem;
+        }
+
+        .details-content p {
+            margin-bottom: 20px;
+            font-size: 0.95rem;
+            color: #aaa;
+        }
+
+        .details-footer {
+            font-size: 0.8rem !important;
+            color: #666 !important;
+            text-align: center;
+            margin-top: 40px !important;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="main-layout">
+        <div class="ad-container">Ad Space (Left)</div>
+
+        <div class="app-container" id="app-container">
+            <div class="header-container">
+                <div class="title-group">
+                    <h1>GearCheck</h1>
+                    
+                    <h2>Online Mechanical Keyboard Tester & Ghosting Check (Simultaneous Inputs)</h2>
+                </div>
+                <div class="header-controls">
+                    <button class="btn-outline" onclick="toggleSize()" id="btn-numpad">Show Numpad</button>
+                    <button class="btn-outline" onclick="resetBoard()"><span>↻</span> Reset</button>
+                </div>
+            </div>
+
+            <div class="stats-bar">
+                <div class="stat"><span class="stat-val" id="active-keys">0</span><span class="stat-label">Pressed Now</span></div>
+                <div class="stat"><span class="stat-val" id="max-ghosting">0</span><span class="stat-label">Max Simultaneous</span></div>
+                <div class="stat"><span class="stat-val" id="completion-val">0%</span><span class="stat-label">Tested</span></div>
+                <div class="stat stat-interactive" onclick="toggleLayout()"><span class="stat-val" id="layout-id">...</span><span class="stat-label">Switch Layout</span></div>
+            </div>
+
+            <div class="keyboard-wrapper">
+                <div class="keyboard-container" id="keyboard"></div>
+                <div class="nav-container hidden" id="nav"></div>
+                <div class="numpad-container hidden" id="numpad"></div>
+            </div>
+
+            <div class="mouse-section">
+                <h2 class="stat-label">MOUSE POLLING RATE & CLICK TEST</h2>
+                <p class="subtitle" style="text-align: center; font-size: 0.8rem; margin: 0 0 20px 0;">Measure Polling Rate (Hz), Click Speed (CPS), and Test All Buttons & Scroll Wheel</p>
+                
+                <div class="mouse-grid">
+                    <div class="mouse-box" id="mouse-area">
+                        <div class="hz-main" id="hz-val">0 Hz</div>
+                        <div class="hz-sub">Peak: <span id="peak-hz">0</span> Hz</div>
+                        <div class="hz-hint">Click to Reset Hz</div>
+                    </div>
+
+                    <div class="mouse-panel">
+                        <div class="mouse-stats-row">
+                            <div class="m-stat"><span class="m-val" id="total-clicks">0</span><span class="m-lbl">Total Clicks</span></div>
+                            <div class="m-stat"><span class="m-val" id="cps-val">0</span><span class="m-lbl">Clicks / Sec</span></div>
+                            <div class="m-stat"><span class="m-val" id="last-btn">...</span><span class="m-lbl">Last Button</span></div>
+                        </div>
+
+                        <div class="reset-icon" onclick="resetClickStats()" title="Reset Stats">↻</div>
+
+                        <div class="click-hint">Click inside to test buttons</div>
+
+                        <div class="mouse-controls-grid">
+                            <div class="mouse-row">
+                                <div class="key mouse-key" id="mb-0">Left</div>
+                                <div class="key mouse-key" id="mb-1">Middle</div>
+                                <div class="key mouse-key" id="mb-2">Right</div>
+                            </div>
+                            <div class="mouse-row" style="align-items: center;">
+                                <div class="key mouse-key" id="mb-3">Back</div>
+                                <div class="scroll-wheel-container">
+                                    <div class="scroll-half scroll-up" id="scroll-up">▲</div>
+                                    <div class="scroll-half scroll-down" id="scroll-down">▼</div>
+                                </div>
+                                <div class="key mouse-key" id="mb-4">Forward</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="horizontal-ad-container">
+                Ad Space (Horizontal Banner)
+            </div>
+
+            <div class="details-content">
+                
+                <h3>How to Test Your Keyboard</h3>
+                <p>
+                    Using this <strong>online keyboard tester</strong> is simple:
+                    <br><strong>1. Test Keys:</strong> Press any key on your physical keyboard. If the virtual key <strong>glows green</strong>, it is working.
+                    <br><strong>2. Numpad:</strong> Click <strong>"Show Numpad"</strong> at the top to test the number pad.
+                    <br><strong>3. Layouts:</strong> Click <strong>"Switch Layout"</strong> to swap between Windows and Mac keys.
+                    <br><strong>4. Reset:</strong> Click <strong>"Reset"</strong> to clear the board and restart the test.
+                    <br><strong>5. Ghosting Stats:</strong> Watch the stats bar. <strong>"Pressed Now"</strong> shows real-time activity, while <strong>"Max Simultaneous"</strong> records the most keys you pressed at once. Use this to test your keyboard's Anti-Ghosting / N-Key Rollover limits.
+                </p>
+
+                <h3>How to Test Your Mouse</h3>
+                <p>
+                    <strong>1. Measure Polling Rate (Hz):</strong> Move your cursor quickly inside the <strong>Left Panel</strong> to test your sensor's stability and peak Hz. Click anywhere in the box to reset it.<br>
+                    <strong>2. Test Buttons & Scroll:</strong> Click your Left, Right, Middle, and Side buttons inside the <strong>Right Panel</strong> to verify they work. Scroll up and down to check your wheel.<br>
+                    <strong>3. CPS Challenge:</strong> Want to test your gaming speed? Click as fast as you can in the Right Panel to maximize your <strong>Clicks Per Second (CPS)</strong>. Try to beat your personal best!
+                </p>
+
+                <h3>Who is this site for?</h3>
+                <p>
+                    <strong>• Gamers:</strong> Verify your mechanical keyboard's N-Key Rollover (Anti-Ghosting) and check if your mouse is actually hitting its advertised 1000Hz or 8000Hz polling rate.
+                    <br><strong>• Used Hardware Buyers:</strong> Buying a keyboard from eBay or Facebook Marketplace? Use this tool on your phone or laptop to instantly check for dead keys before handing over cash.
+                    <br><strong>• IT Professionals:</strong> Quickly diagnose if a ticket regarding "broken typing" is a hardware failure or a software issue.
+                </p>
+
+                <h3>When should you use this site?</h3>
+                <p>
+                    <strong>• After a Spill:</strong> If you spilled water or coffee on your keyboard, use this test to see if specific keys are short-circuiting or ghosting.
+                    <br><strong>• Installing New Switches:</strong> Just built a custom mechanical keyboard? Use the "Reset" button and press every key to ensure your hot-swap switches are seated correctly.
+                    <br><strong>• Mouse Lagging:</strong> If your aim feels "floaty" in games like CS2 or Valorant, check the "Mouse Hz" box. If the Hz fluctuates wildly (e.g., drops to 300Hz), your sensor may be dirty or defective.
+                </p>
+
+                <h3>What is Keyboard Ghosting?</h3>
+                <p>
+                    <strong>Ghosting</strong> occurs when a keyboard fails to register a key press because too many keys are held down simultaneously. 
+                    Standard office keyboards often jam after 3-6 keys. Gaming keyboards with <strong>NKRO (N-Key Rollover)</strong> allow you to press all keys at once.
+                    Use the "Max Simultaneous" counter above to prove if your keyboard is truly NKRO.
+                </p>
+
+                <h3>What is a Mouse Polling Rate Tester?</h3>
+                <p>
+                    A <strong>Mouse Polling Rate Tester</strong> measures how many times per second (Hertz) your mouse sends position data to your computer. 
+                    For example, a <strong>1000 Hz polling rate</strong> means the mouse reports its location 1000 times per second, resulting in a refresh every <strong>1 millisecond</strong>.
+                    A higher polling rate means less input lag and smoother cursor movement, which is essential for competitive gaming.
+                </p>
+
+                <h3>Why is my Polling Rate 60Hz or 125Hz?</h3>
+                <p>
+                    Your mouse's polling rate determines how often it reports position to your computer.
+                    <br>• <strong>60Hz - 90Hz:</strong> Common for Bluetooth mice or browser limitations (vsync).
+                    <br>• <strong>125Hz:</strong> Standard wired office mice (8ms latency).
+                    <br>• <strong>1000Hz+:</strong> Dedicated gaming mice (1ms latency).
+                    <br>Move your cursor continuously in the "Mouse Box" above to verify your real-time performance.
+                </p>
+
+                <h3>Frequently Asked Questions</h3>
+                
+                <p><strong>Why is my polling rate stuck at 60Hz?</strong><br>
+                If your mouse test shows exactly 60Hz, it is likely limited by your browser or monitor refresh rate (V-Sync). Try closing other tabs or using a wired connection instead of Bluetooth.</p>
+
+                <p><strong>How do I fix keyboard ghosting?</strong><br>
+                Ghosting is a hardware limitation of the keyboard's internal circuitry. You cannot "fix" it with software. The only solution is to upgrade to a mechanical keyboard with N-Key Rollover (NKRO).</p>
+
+                <p><strong>Does a higher polling rate drain battery?</strong><br>
+                Yes. A wireless mouse running at 1000Hz consumes significantly more power than one at 125Hz. For office work, we recommend switching to 125Hz to extend battery life.</p>
+
+                <p class="details-footer">
+                    Compatible with Windows, macOS, and Linux. No software download required.
+                </p>
+            </div>
+            </div> <div class="ad-container">Ad Space (Right)</div>
+    </div> 
+
+<script>
+        const isMac = navigator.userAgent.toLowerCase().includes('mac');
+        let currentLayout = isMac ? "mac" : "win";
+        document.getElementById('layout-id').textContent = isMac ? "MacBook" : "Windows";
+        
+        let isFullSize = false;
+        const keyMap = {}; 
+        
+        // --- KEYS TO EXCLUDE FROM 100% COUNT ---
+        // These keys are often intercepted by the OS/Browser and cannot be detected reliably
+        const ignoredKeys = new Set(['F11', 'WakeUp', 'Power', 'MediaEject', 'Sleep']);
+
+        // --- COMPLETION TRACKING ---
+        const testedKeysSet = new Set();
+        let totalRenderedKeys = 0;
+
+        // --- MAIN BOARD ARRAYS ---
+        const row1 = [['Esc', 'u-f', 'Escape'], ['F1', 'u-f', 'F1'], ['F2', 'u-f', 'F2'], ['F3', 'u-f', 'F3'], ['F4', 'u-f', 'F4'], ['F5', 'u-f', 'F5'], ['F6', 'u-f', 'F6'], ['F7', 'u-f', 'F7'], ['F8', 'u-f', 'F8'], ['F9', 'u-f', 'F9'], ['F10', 'u-f', 'F10'], ['F11', 'u-f', 'F11'], ['F12', 'u-f', 'F12'], ['⏻', 'u-f', 'MediaEject']];
+        const row2 = [['~', 'u-1', 'Backquote'], ['1', 'u-1', 'Digit1'], ['2', 'u-1', 'Digit2'], ['3', 'u-1', 'Digit3'], ['4', 'u-1', 'Digit4'], ['5', 'u-1', 'Digit5'], ['6', 'u-1', 'Digit6'], ['7', 'u-1', 'Digit7'], ['8', 'u-1', 'Digit8'], ['9', 'u-1', 'Digit9'], ['0', 'u-1', 'Digit0'], ['-', 'u-1', 'Minus'], ['=', 'u-1', 'Equal'], ['delete', 'u-2', 'Backspace']];
+        const row3 = [['tab', 'u-15', 'Tab'], ['Q', 'u-1', 'KeyQ'], ['W', 'u-1', 'KeyW'], ['E', 'u-1', 'KeyE'], ['R', 'u-1', 'KeyR'], ['T', 'u-1', 'KeyT'], ['Y', 'u-1', 'KeyY'], ['U', 'u-1', 'KeyU'], ['I', 'u-1', 'KeyI'], ['O', 'u-1', 'KeyO'], ['P', 'u-1', 'KeyP'], ['{\n[', 'u-1', 'BracketLeft'], ['}\n]', 'u-1', 'BracketRight'], ['|\n\\', 'u-15', 'Backslash']];
+        const row4 = [['caps lock', 'u-175', 'CapsLock'], ['A', 'u-1', 'KeyA'], ['S', 'u-1', 'KeyS'], ['D', 'u-1', 'KeyD'], ['F', 'u-1', 'KeyF'], ['G', 'u-1', 'KeyG'], ['H', 'u-1', 'KeyH'], ['J', 'u-1', 'KeyJ'], ['K', 'u-1', 'KeyK'], ['L', 'u-1', 'KeyL'], [':\n;', 'u-1', 'Semicolon'], ['"\n\'', 'u-1', 'Quote'], ['return', 'u-225', 'Enter']];
+        const row5 = [['shift', 'u-225', 'ShiftLeft'], ['Z', 'u-1', 'KeyZ'], ['X', 'u-1', 'KeyX'], ['C', 'u-1', 'KeyC'], ['V', 'u-1', 'KeyV'], ['B', 'u-1', 'KeyB'], ['N', 'u-1', 'KeyN'], ['M', 'u-1', 'KeyM'], ['<\n,', 'u-1', 'Comma'], ['>\n.', 'u-1', 'Period'], ['?\n/', 'u-1', 'Slash'], ['shift', 'u-275', 'ShiftRight']];
+
+        const navKeysWin = [['PrtSc', '', 'PrintScreen'], ['ScrLk', '', 'ScrollLock'], ['Pause', '', 'Pause'], ['Ins', '', 'Insert'], ['Home', '', 'Home'], ['PgUp', '', 'PageUp'], ['Del', '', 'Delete'], ['End', '', 'End'], ['PgDn', '', 'PageDown']];
+        const navKeysMac = [['F13', '', 'F13'], ['F14', '', 'F14'], ['F15', '', 'F15'], ['fn', '', 'WakeUp'], ['Home', '', 'Home'], ['PgUp', '', 'PageUp'], ['Del', '', 'Delete'], ['End', '', 'End'], ['PgDn', '', 'PageDown']];
+        const numpadKeysWin = [['', 'spacer', ''], ['', 'spacer', ''], ['', 'spacer', ''], ['', 'spacer', ''], ['Num', '', 'NumLock'], ['/', '', 'NumpadDivide'], ['*', '', 'NumpadMultiply'], ['-', '', 'NumpadSubtract'], ['7', '', 'Numpad7'], ['8', '', 'Numpad8'], ['9', '', 'Numpad9'], ['+', 'u-num-tall', 'NumpadAdd'], ['4', '', 'Numpad4'], ['5', '', 'Numpad5'], ['6', '', 'Numpad6'], ['1', '', 'Numpad1'], ['2', '', 'Numpad2'], ['3', '', 'Numpad3'], ['Enter', 'u-num-tall', 'NumpadEnter'], ['0', 'u-num-0', 'Numpad0'], ['.', '', 'NumpadDecimal']];
+        const numpadKeysMac = [['F16', '', 'F16'], ['F17', '', 'F17'], ['F18', '', 'F18'], ['F19', '', 'F19'], ['clear', '', 'NumLock'], ['=', '', 'NumpadEqual'], ['/', '', 'NumpadDivide'], ['*', '', 'NumpadMultiply'], ['7', '', 'Numpad7'], ['8', '', 'Numpad8'], ['9', '', 'Numpad9'], ['-', '', 'NumpadSubtract'], ['4', '', 'Numpad4'], ['5', '', 'Numpad5'], ['6', '', 'Numpad6'], ['+', '', 'NumpadAdd'], ['1', '', 'Numpad1'], ['2', '', 'Numpad2'], ['3', '', 'Numpad3'], ['Enter', 'u-num-tall', 'NumpadEnter'], ['0', 'u-num-0', 'Numpad0'], ['.', '', 'NumpadDecimal']];
+
+        const keyboardEl = document.getElementById('keyboard');
+        const navEl = document.getElementById('nav');
+        const numpadEl = document.getElementById('numpad');
+
+        function renderBoard() {
+            keyboardEl.innerHTML = ''; 
+            renderRow(row1); renderRow(row2); renderRow(row3); renderRow(row4); renderRow(row5); 
+            let row6 = currentLayout === 'mac' 
+                ? [['fn', 'u-1', 'WakeUp'], ['control', 'u-1', 'ControlLeft'], ['option', 'u-1', 'AltLeft'], ['command', 'u-cmd', 'MetaLeft'], ['space', 'u-space', 'Space'], ['command', 'u-cmd', 'MetaRight'], ['option', 'u-1', 'AltRight']]
+                : [['Fn', 'u-1', 'WakeUp'], ['Ctrl', 'u-1', 'ControlLeft'], ['Alt', 'u-1', 'AltLeft'], ['Win', 'u-cmd', 'MetaLeft'], ['Space', 'u-space', 'Space'], ['Win', 'u-cmd', 'MetaRight'], ['Alt', 'u-1', 'AltRight']];
+            renderRow(row6, true);
+        }
+
+        function renderRow(keys, isBottom = false) {
+            const rowDiv = document.createElement('div'); rowDiv.className = 'row';
+            keys.forEach(([label, width, code]) => {
+                const k = document.createElement('div'); k.className = `key ${width}`; k.textContent = label;
+                if (keyMap[code] && keyMap[code].classList.contains('tested')) k.classList.add('tested');
+                keyMap[code] = k; rowDiv.appendChild(k);
+            });
+            if (isBottom) {
+                const arrowCluster = document.createElement('div'); arrowCluster.className = 'arrow-cluster';
+                const left = document.createElement('div'); left.className = 'key u-1'; left.textContent = '←'; keyMap['ArrowLeft'] = left;
+                const stack = document.createElement('div'); stack.className = 'arrow-stack';
+                const up = document.createElement('div'); up.className = 'key key-half'; up.textContent = '↑'; keyMap['ArrowUp'] = up;
+                const down = document.createElement('div'); down.className = 'key key-half'; down.textContent = '↓'; keyMap['ArrowDown'] = down;
+                stack.appendChild(up); stack.appendChild(down);
+                const right = document.createElement('div'); right.className = 'key u-1'; right.textContent = '→'; keyMap['ArrowRight'] = right;
+                arrowCluster.append(left, stack, right); rowDiv.appendChild(arrowCluster);
+            }
+            keyboardEl.appendChild(rowDiv);
+        }
+
+        function renderNav() { navEl.innerHTML = ''; (currentLayout === 'mac' ? navKeysMac : navKeysWin).forEach(([l, c, k]) => { const d = document.createElement('div'); d.className = `key ${c}`; d.textContent = l; d.style.fontSize = "11px"; if(keyMap[k]?.classList.contains('tested')) d.classList.add('tested'); keyMap[k] = d; navEl.appendChild(d); }); }
+        function renderNumpad() { numpadEl.innerHTML = ''; (currentLayout === 'mac' ? numpadKeysMac : numpadKeysWin).forEach(([l, c, k]) => { const d = document.createElement('div'); d.className = `key ${c}`; d.textContent = l; if(keyMap[k]?.classList.contains('tested')) d.classList.add('tested'); keyMap[k] = d; numpadEl.appendChild(d); }); }
+
+        function toggleLayout() { 
+            currentLayout = currentLayout === 'mac' ? 'win' : 'mac'; 
+            document.getElementById('layout-id').textContent = currentLayout === 'mac' ? "MacBook" : "Windows"; 
+            renderBoard(); renderNav(); renderNumpad(); 
+            recalcTotalKeys(); 
+        }
+        
+        function toggleSize() { 
+            isFullSize = !isFullSize; 
+            const nav = document.getElementById('nav'); 
+            const numpad = document.getElementById('numpad'); 
+            const btn = document.getElementById('btn-numpad'); 
+            const container = document.getElementById('app-container'); 
+            
+            if (isFullSize) { 
+                nav.classList.remove('hidden'); 
+                numpad.classList.remove('hidden'); 
+                btn.textContent = "Hide Numpad"; 
+                document.body.classList.add('full-mode'); 
+                container.style.maxWidth = "1400px"; 
+            } else { 
+                nav.classList.add('hidden'); 
+                numpad.classList.add('hidden'); 
+                btn.textContent = "Show Numpad"; 
+                document.body.classList.remove('full-mode'); 
+                container.style.maxWidth = "950px"; 
+            }
+            recalcTotalKeys(); 
+        }
+
+        function recalcTotalKeys() {
+            totalRenderedKeys = 0;
+            for (let code in keyMap) {
+                // SKIP IF: 
+                // 1. Key is in the "Ignored" list (Fn, F11, Power)
+                // 2. Key is currently hidden (Numpad hidden)
+                // 3. Key is invalid/spacer
+                const el = keyMap[code];
+                if (code && code.trim() !== '' && !ignoredKeys.has(code) && el.offsetParent !== null) {
+                    totalRenderedKeys++;
+                }
+            }
+            updateCompletion();
+        }
+
+        function updateCompletion() {
+            if (totalRenderedKeys === 0) return;
+            
+            let visibleTestedCount = 0;
+            testedKeysSet.forEach(code => {
+                const el = keyMap[code];
+                // Only count tested key if it is NOT ignored and IS visible
+                if (el && !ignoredKeys.has(code) && el.offsetParent !== null) {
+                    visibleTestedCount++;
+                }
+            });
+
+            // Prevent over 100% just in case
+            let pct = Math.floor((visibleTestedCount / totalRenderedKeys) * 100);
+            if (pct > 100) pct = 100;
+            
+            const el = document.getElementById('completion-val');
+            el.textContent = pct + "%";
+        }
+
+        renderBoard(); renderNav(); renderNumpad();
+        setTimeout(recalcTotalKeys, 100);
+
+        const activeKeys = new Set(); let maxKeys = 0;
+        
+        document.addEventListener('keydown', (e) => { 
+            if (e.code !== 'CapsLock') e.preventDefault(); 
+            
+            if(keyMap[e.code]) { 
+                keyMap[e.code].classList.add('pressed'); 
+                keyMap[e.code].classList.add('tested'); 
+                testedKeysSet.add(e.code);
+                updateCompletion();
+            } 
+            activeKeys.add(e.code); 
+            updateStats(); 
+        });
+        
+        document.addEventListener('keyup', (e) => { 
+            if (e.code !== 'CapsLock') e.preventDefault();
+            if(keyMap[e.code]) keyMap[e.code].classList.remove('pressed'); 
+            activeKeys.delete(e.code); 
+            updateStats(); 
+        });
+        
+        function updateStats() { document.getElementById('active-keys').textContent = activeKeys.size; if(activeKeys.size > maxKeys) { maxKeys = activeKeys.size; document.getElementById('max-ghosting').textContent = maxKeys; } }
+        
+        function resetBoard() { 
+            document.querySelectorAll('.key').forEach(k => { k.classList.remove('tested'); k.classList.remove('pressed'); }); 
+            activeKeys.clear(); maxKeys = 0; 
+            document.getElementById('active-keys').textContent = "0"; 
+            document.getElementById('max-ghosting').textContent = "0"; 
+            testedKeysSet.clear();
+            updateCompletion();
+            resetAllMouseStats();
+        }
+
+        const mouseArea = document.getElementById('mouse-area'); const hzVal = document.getElementById('hz-val'); const peakEl = document.getElementById('peak-hz');
+        let times = []; let peakHz = 0; let lastMoveTime = 0; let isLoopRunning = false; 
+        
+        let totalClicks = 0;
+        let clickTimestamps = [];
+        const cpsEl = document.getElementById('cps-val');
+        const lastBtnEl = document.getElementById('last-btn');
+        let cpsLoopRunning = false;
+
+        function resetPollingStats() { times = []; peakHz = 0; lastMoveTime = 0; hzVal.textContent = "0 Hz"; peakEl.textContent = "0"; hzVal.style.color = "#fff"; }
+        function resetClickStats() {
+            totalClicks = 0; clickTimestamps = [];
+            document.getElementById('total-clicks').textContent = "0"; cpsEl.textContent = "0"; lastBtnEl.textContent = "...";
+            document.querySelectorAll('.mouse-panel .key, .mouse-panel .scroll-half').forEach(k => { k.classList.remove('tested'); k.classList.remove('pressed'); });
+        }
+        function resetAllMouseStats() { resetPollingStats(); resetClickStats(); }
+        
+        document.querySelector('.mouse-section').addEventListener('contextmenu', (e) => { e.preventDefault(); return false; });
+
+        document.addEventListener('mousedown', (e) => {
+            if (e.target.closest('#mouse-area')) { resetPollingStats(); return; }
+            if (e.target.closest('.mouse-panel')) {
+                if (e.target.closest('.reset-icon')) return;
+                const btnId = `mb-${e.button}`; const btnEl = document.getElementById(btnId);
+                totalClicks++; document.getElementById('total-clicks').textContent = totalClicks;
+                let btnName = "Mouse " + (e.button + 1);
+                if(e.button === 0) btnName = "Left"; if(e.button === 1) btnName = "Middle"; if(e.button === 2) btnName = "Right"; if(e.button === 3) btnName = "Back"; if(e.button === 4) btnName = "Forward";
+                lastBtnEl.textContent = btnName;
+                const now = performance.now(); clickTimestamps.push(now);
+                if (!cpsLoopRunning) { cpsLoopRunning = true; requestAnimationFrame(updateCPS); }
+                if (btnEl) { btnEl.classList.add('pressed'); btnEl.classList.add('tested'); }
+                if (e.button === 3 || e.button === 4) { e.preventDefault(); }
+            }
+        });
+
+        document.addEventListener('mouseup', (e) => { const btnId = `mb-${e.button}`; const btnEl = document.getElementById(btnId); if (btnEl) btnEl.classList.remove('pressed'); });
+
+        document.addEventListener('wheel', (e) => { 
+            if (e.target.closest('.mouse-section')) { 
+                if (e.target.closest('.mouse-panel')) {
+                    e.preventDefault(); 
+                    const up = document.getElementById('scroll-up'); const down = document.getElementById('scroll-down'); 
+                    if (e.deltaY < 0) { up.classList.add('pressed'); up.classList.add('tested'); setTimeout(() => up.classList.remove('pressed'), 150); } 
+                    else { down.classList.add('pressed'); down.classList.add('tested'); setTimeout(() => down.classList.remove('pressed'), 150); } 
+                }
+            } 
+        }, { passive: false });
+
+        mouseArea.addEventListener('mousemove', () => { const now = performance.now(); lastMoveTime = now; times.push(now); if (!isLoopRunning) { isLoopRunning = true; requestAnimationFrame(animateMouseStats); } });
+        function animateMouseStats() {
+            const now = performance.now();
+            while(times.length > 0 && times[0] <= now - 1000) times.shift();
+            if (now - lastMoveTime > 100) { hzVal.textContent = "0 Hz"; hzVal.style.color = "#fff"; isLoopRunning = false; return; } 
+            const currentHz = times.length;
+            if(currentHz > peakHz) { peakHz = currentHz; peakEl.textContent = peakHz; }
+            hzVal.textContent = currentHz + " Hz";
+            if(currentHz > 500) hzVal.style.color = "#00ff88"; else hzVal.style.color = "#fff";
+            if (isLoopRunning) requestAnimationFrame(animateMouseStats);
+        }
+
+        function updateCPS() {
+            const now = performance.now();
+            clickTimestamps = clickTimestamps.filter(t => t > now - 1000);
+            cpsEl.textContent = clickTimestamps.length;
+            if (clickTimestamps.length > 0) requestAnimationFrame(updateCPS); else cpsLoopRunning = false;
+        }
+    </script>
+</body>
+</html>
