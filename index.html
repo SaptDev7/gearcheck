@@ -74,41 +74,6 @@
             transition: gap 0.3s ease;
         }
 
-        /* --- AD CONTAINERS --- */
-        .ad-container {
-            width: 160px; 
-            height: 600px;
-            background: var(--ad-placeholder);
-            border: 1px dashed #333;
-            border-radius: 8px;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            color: #444;
-            font-size: 0.8rem;
-            font-weight: bold;
-            flex-shrink: 0; 
-            transition: opacity 0.3s ease;
-        }
-
-        /* --- HORIZONTAL AD --- */
-        .horizontal-ad-container {
-            width: 100%;
-            max-width: 950px;       /* Matches the app width */
-            height: 90px;           /* Standard Leaderboard Ad height */
-            background: var(--ad-placeholder);
-            border: 1px dashed #333;
-            border-radius: 8px;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            color: #444;
-            font-size: 0.8rem;
-            font-weight: bold;
-            margin-top: 50px;       /* Space above the ad */
-            margin-bottom: 10px;    /* Space below the ad */
-        }
-
         /* --- APP CONTAINER --- */
         .app-container {
             display: flex;
@@ -117,12 +82,6 @@
             width: 100%;
             max-width: 950px; 
             transition: max-width 0.3s ease;
-        }
-
-        @media (max-width: 1280px) { .ad-container { display: none; } }
-        @media (max-width: 1750px) {
-            body.full-mode .ad-container { display: none; }
-            body.full-mode .main-layout { gap: 0; } 
         }
 
         /* --- HEADER & CONTROLS --- */
@@ -321,8 +280,6 @@
 <body>
 
     <div class="main-layout">
-        <div class="ad-container">Ad Space (Left)</div>
-
         <div class="app-container" id="app-container">
             <div class="header-container">
                 <div class="title-group">
@@ -388,10 +345,6 @@
                         </div>
                     </div>
                 </div>
-            </div>
-
-            <div class="horizontal-ad-container">
-                Ad Space (Horizontal Banner)
             </div>
 
             <div class="details-content">
@@ -466,7 +419,6 @@
                     <br><br><a href="privacy.html" style="color:#666; text-decoration:none;">Privacy Policy</a>
                 </p>
             </div>
-            </div> <div class="ad-container">Ad Space (Right)</div>
     </div> 
 
 <script>
